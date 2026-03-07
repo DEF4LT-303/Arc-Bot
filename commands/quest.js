@@ -36,58 +36,82 @@ module.exports = {
 
   async execute(interaction) {
     const name = interaction.options.getString("name");
-
     const quest = cache.getQuestByName(name);
 
     if (!quest) {
       return interaction.reply("Quest not found.");
     }
 
+    // Prepare locations
+    const locations =
+      quest.locations && quest.locations.length > 0
+        ? quest.locations.join(", ")
+        : "Unknown";
+
+    // Prepare objectives
+    const objectives =
+      quest.objectives && quest.objectives.length > 0
+        ? quest.objectives.join("\n")
+        : "None";
+
+    // Prepare rewards
+    const rewardsList =
+      quest.rewards && quest.rewards.length > 0
+        ? quest.rewards
+            .map((r) => `• ${r.item.name} x${r.quantity} (${r.item.rarity})`)
+            .join("\n")
+        : "None";
+
     const embed = new EmbedBuilder()
       .setTitle(`📋 ${quest.name}`)
-      .setDescription(quest.description || "No description")
       .setColor("#3BA55D")
       .addFields(
         {
-          name: "📍 Location",
-          value: quest.map_name || "Unknown",
+          name: "📌 Objectives",
+          value:
+            quest.objectives && quest.objectives.length > 0
+              ? quest.objectives.map((obj, i) => `• ${obj}`).join("\n")
+              : "None",
+          inline: false,
+        },
+        {
+          name: "📍 Locations",
+          value:
+            quest.locations && quest.locations.length > 0
+              ? quest.locations.join(", ")
+              : "Unknown",
           inline: true,
         },
         {
-          name: "⭐ Difficulty",
-          value: quest.difficulty || "Unknown",
+          name: "🎁 Rewards",
+          value:
+            quest.rewards && quest.rewards.length > 0
+              ? quest.rewards
+                  .map(
+                    (r) => `• ${r.item.name} x${r.quantity} (${r.item.rarity})`,
+                  )
+                  .join("\n")
+              : "None",
+          inline: false,
+        },
+        {
+          name: "🔗 Guide",
+          value:
+            quest.guide_links && quest.guide_links.length > 0
+              ? quest.guide_links
+                  .map((link) => `[${link.label}](${link.url})`)
+                  .join("\n")
+              : "None",
+          inline: false,
+        },
+        {
+          name: "🧑‍💼 Trader",
+          value: quest.trader_name || "Unknown",
           inline: true,
         },
-      );
-
-    // Add required items if available
-    if (quest.required_items && quest.required_items.length > 0) {
-      const itemsList = quest.required_items
-        .map((item) => `• ${item.name}`)
-        .join("\n");
-      embed.addFields({
-        name: "📦 Required Items",
-        value: itemsList || "None",
-        inline: false,
-      });
-    }
-
-    // Add rewards if available
-    if (quest.rewards && quest.rewards.length > 0) {
-      const rewardsList = quest.rewards
-        .map((reward) => `• ${reward.name}`)
-        .join("\n");
-      embed.addFields({
-        name: "🎁 Rewards",
-        value: rewardsList || "None",
-        inline: false,
-      });
-    }
-
-    embed
-      .setFooter({
-        text: "ARC Raiders Database",
-      })
+      )
+      .setThumbnail(quest.image)
+      .setFooter({ text: "ARC Raiders Database" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });

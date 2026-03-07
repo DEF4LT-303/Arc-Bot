@@ -57,5 +57,5 @@ jobs:
             echo "✅ Bot deployed and started with PM2"
 
             # Register slash commands
-            node deploy-commands.js
+            npm run deploy
             echo "✅ Slash commands registered"

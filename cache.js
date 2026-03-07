@@ -65,7 +65,7 @@ class ItemCache {
       let hasNextPage = true;
       while (hasNextPage) {
         const res = await axios.get(
-          `https://metaforge.app/api/arc-raiders/items?page=${page}&limit=100`,
+          `https://metaforge.app/api/arc-raiders/items?page=${page}&limit=100&includeComponents=true`,
         );
         allItems = allItems.concat(res.data.data || []);
         hasNextPage = res.data.pagination?.hasNextPage || false;
