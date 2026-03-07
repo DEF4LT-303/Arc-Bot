@@ -55,6 +55,11 @@ module.exports = {
             "Check cache statistics, last update time, and current status.",
           inline: false,
         },
+        {
+          name: "🤖 `/invite` - Invite Bot",
+          value: "Get the invite link to add this bot to other servers.",
+          inline: false,
+        },
       )
       .addFields({
         name: "💾 Data & Caching",
