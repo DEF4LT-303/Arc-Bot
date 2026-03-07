@@ -45,11 +45,11 @@ module.exports = {
       return interaction.reply({
         content:
           "⚠️ You can only choose **either a map or an event**, not both.",
-        ephemeral: true, // only visible to the user
+        ephemeral: true,
       });
     }
 
-    let events = cache.getEvents();
+    const events = cache.getEvents();
 
     if (!events || events.length === 0) {
       return interaction.reply(
@@ -58,8 +58,6 @@ module.exports = {
     }
 
     const now = Date.now();
-
-    // Keep only upcoming or active events
     const upcoming = events.filter((event) => event.endTime > now);
 
     if (upcoming.length === 0) {
@@ -82,20 +80,17 @@ module.exports = {
       }
 
       embeds = matching.map((event) => {
-        const startDate = new Date(event.startTime);
-        const endDate = new Date(event.endTime);
+        const startUnix = Math.floor(event.startTime / 1000);
+        const endUnix = Math.floor(event.endTime / 1000);
         const durationMins = (event.endTime - event.startTime) / 1000 / 60;
 
         const timeUntilStart = event.startTime - now;
 
         let timeStatus = "";
         if (timeUntilStart > 0) {
-          const hours = Math.floor(timeUntilStart / 1000 / 60 / 60);
-          const mins = Math.floor((timeUntilStart / 1000 / 60) % 60);
-          timeStatus = `🕐 Starts in ${hours}h ${mins}m`;
+          timeStatus = `🕐 Starts <t:${startUnix}:R>`;
         } else {
-          const minsRemaining = Math.floor((event.endTime - now) / 1000 / 60);
-          timeStatus = `🔴 ACTIVE (${minsRemaining}m remaining)`;
+          timeStatus = `🔴 ACTIVE • ends <t:${endUnix}:R>`;
         }
 
         return new EmbedBuilder()
@@ -111,20 +106,12 @@ module.exports = {
             },
             {
               name: "🕐 Start",
-              value: startDate.toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-              }),
+              value: `<t:${startUnix}:t>`,
               inline: true,
             },
             {
               name: "🕑 End",
-              value: endDate.toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-              }),
+              value: `<t:${endUnix}:t>`,
               inline: true,
             },
             {
@@ -154,36 +141,25 @@ module.exports = {
 
       const eventList = mapEvents
         .map((event) => {
-          const startDate = new Date(event.startTime);
-          const endDate = new Date(event.endTime);
+          const startUnix = Math.floor(event.startTime / 1000);
+          const endUnix = Math.floor(event.endTime / 1000);
 
           const timeUntilStart = event.startTime - now;
 
           let timeStatus = "";
           if (timeUntilStart > 0) {
-            const hours = Math.floor(timeUntilStart / 1000 / 60 / 60);
-            const mins = Math.floor((timeUntilStart / 1000 / 60) % 60);
-            timeStatus = `🕐 ${hours}h ${mins}m`;
+            timeStatus = `🕐 <t:${startUnix}:R>`;
           } else {
-            const minsRemaining = Math.floor((event.endTime - now) / 1000 / 60);
-            timeStatus = `🔴 ${minsRemaining}m left`;
+            timeStatus = `🔴 ends <t:${endUnix}:R>`;
           }
 
           return `**${event.name}**
-${timeStatus} • ${startDate.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          })} - ${endDate.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          })}`;
+${timeStatus} • <t:${startUnix}:t> - <t:${endUnix}:t>`;
         })
         .join("\n\n");
 
       const embed = new EmbedBuilder()
-        .setTitle(`🗺️ ${selectedMap} Events`)
+        .setTitle(`📍 ${selectedMap} Events`)
         .setDescription(eventList)
         .setColor("#3BA55D")
         .setFooter({ text: "ARC Raiders Bot | Data from MetaForge API" })
@@ -212,33 +188,25 @@ ${timeStatus} • ${startDate.toLocaleTimeString("en-US", {
 
         const eventList = mapUpcoming
           .map((event) => {
-            const startDate = new Date(event.startTime);
+            const startUnix = Math.floor(event.startTime / 1000);
+            const endUnix = Math.floor(event.endTime / 1000);
 
             const timeUntilStart = event.startTime - now;
 
             let timeStatus = "";
             if (timeUntilStart > 0) {
-              const hours = Math.floor(timeUntilStart / 1000 / 60 / 60);
-              const mins = Math.floor((timeUntilStart / 1000 / 60) % 60);
-              timeStatus = `🕐 ${hours}h ${mins}m`;
+              timeStatus = `🕐 <t:${startUnix}:R>`;
             } else {
-              const minsRemaining = Math.floor(
-                (event.endTime - now) / 1000 / 60,
-              );
-              timeStatus = `🔴 ${minsRemaining}m left`;
+              timeStatus = `🔴 ends <t:${endUnix}:R>`;
             }
 
             return `**${event.name}**
-${timeStatus} • ${startDate.toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            })}`;
+${timeStatus} • <t:${startUnix}:t>`;
           })
           .join("\n\n");
 
         const embed = new EmbedBuilder()
-          .setTitle(`🗺️ ${mapName}`)
+          .setTitle(`📍 ${mapName}`)
           .setDescription(eventList)
           .setColor("#3BA55D")
           .setFooter({ text: "ARC Raiders Bot | Data from MetaForge API" })
