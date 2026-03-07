@@ -18,7 +18,6 @@ Simple Discord.js v14 bot with slash commands for ARC Raiders game data.
 ```
 DISCORD_TOKEN=your-bot-token
 CLIENT_ID=your-application-id
-GUILD_ID=guild_id_1,guild_id_2,guild_id_3   # comma-separated for multiple guilds
 ```
 
 2. Install dependencies:
@@ -27,7 +26,7 @@ GUILD_ID=guild_id_1,guild_id_2,guild_id_3   # comma-separated for multiple guild
 npm install
 ```
 
-3. Register slash commands:
+3. Register slash commands (global - available in all servers):
 
 ```bash
 npm run deploy
@@ -84,7 +83,6 @@ Add these secrets to your GitHub repository (`Settings > Secrets and variables >
 ```
 DISCORD_TOKEN=your-bot-token
 CLIENT_ID=your-application-id
-GUILD_ID=your-server-guild-ids   # comma-separated: guild1,guild2,guild3
 
 HOSTINGER_HOST=your-hostinger-server-ip
 HOSTINGER_USERNAME=your-ssh-username
@@ -190,10 +188,10 @@ npm run deploy
 
 ## Notes
 
-- Use `GUILD_ID` for development; global commands may take up to an hour to appear.
-- For multiple servers, separate guild IDs with commas: `guild1,guild2,guild3`
-- The bot requires the `applications.commands` OAuth2 scope when invited to servers.
-- Commands are registered per guild for faster deployment during development.
+- Commands are registered **globally** - automatically available in all servers where the bot is invited
+- Global command registration is instant after `npm run deploy`
+- The bot requires the `applications.commands` OAuth2 scope when invited to servers
+- Simply invite the bot to any Discord server and commands will be available immediately
 
 ## Support
 
