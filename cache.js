@@ -1,4 +1,6 @@
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 const logger = require("./logger");
 
 class ItemCache {
@@ -8,6 +10,42 @@ class ItemCache {
     this.events = [];
     this.lastUpdated = null;
     this.isUpdating = false;
+    this.cacheFile = path.join(__dirname, "cache-data.json");
+    this.loadFromFile(); // Load cache from file on startup
+  }
+
+  // Load cache from file
+  loadFromFile() {
+    try {
+      if (fs.existsSync(this.cacheFile)) {
+        const data = JSON.parse(fs.readFileSync(this.cacheFile, "utf8"));
+        this.items = data.items || [];
+        this.quests = data.quests || [];
+        this.events = data.events || [];
+        this.lastUpdated = data.lastUpdated ? new Date(data.lastUpdated) : null;
+        logger.info(
+          `Loaded cache from file: ${this.items.length} items, ${this.quests.length} quests, ${this.events.length} events`,
+        );
+      }
+    } catch (err) {
+      logger.info(`Failed to load cache from file: ${err.message}`);
+    }
+  }
+
+  // Save cache to file
+  saveToFile() {
+    try {
+      const data = {
+        items: this.items,
+        quests: this.quests,
+        events: this.events,
+        lastUpdated: this.lastUpdated,
+      };
+      fs.writeFileSync(this.cacheFile, JSON.stringify(data, null, 2));
+      logger.info("Cache saved to file");
+    } catch (err) {
+      logger.info(`Failed to save cache to file: ${err.message}`);
+    }
   }
 
   // Fetch all items from API and cache them
@@ -59,6 +97,9 @@ class ItemCache {
       logger.info(
         `Cache refreshed: ${this.items.length} items, ${this.quests.length} quests, ${this.events.length} events`,
       );
+
+      // Save cache to file for persistence
+      this.saveToFile();
     } catch (err) {
       logger.info(`Cache refresh failed: ${err.message}`);
     } finally {

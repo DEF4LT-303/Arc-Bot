@@ -29,23 +29,6 @@ jobs:
           echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
           echo "GUILD_ID=${{ secrets.GUILD_ID }}" >> .env
 
-      - name: Deploy to Hostinger via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USERNAME }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          port: ${{ secrets.HOSTINGER_PORT || 22 }}
-          script: |
-            cd ${{ secrets.HOSTINGER_DEPLOY_PATH }}
-            # Backup current deployment
-            if [ -d "current" ]; then
-              mv current backup_$(date +%Y%m%d_%H%M%S)
-            fi
-            # Create new deployment directory
-            mkdir -p current
-            cd current
-
       - name: Upload files to Hostinger
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -57,7 +40,7 @@ jobs:
           target: ${{ secrets.HOSTINGER_DEPLOY_PATH }}/current
           strip_components: 0
 
-      - name: Install dependencies and restart bot on server
+      - name: Deploy and start bot on server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.HOSTINGER_HOST }}
@@ -67,10 +50,8 @@ jobs:
           script: |
             cd ${{ secrets.HOSTINGER_DEPLOY_PATH }}/current
             npm install --production
-            # Stop existing bot process
             pm2 stop arc-bot || true
             pm2 delete arc-bot || true
-            # Start new bot process with PM2
-            pm2 start ecosystem.config.js --env production
+            pm2 start ecosystem.config.js --env production --update-env
             pm2 save
-            echo "Bot deployed and started with PM2 successfully"
+            echo "✅ Bot deployed and started with PM2"

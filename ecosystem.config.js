@@ -3,17 +3,15 @@ module.exports = {
     {
       name: "arc-bot",
       script: "index.js",
-      instances: 1,
-      autorestart: true,
+      cwd: "/var/www/arc-bot",
       watch: false,
-      max_memory_restart: "1G",
+      interpreter: "/usr/bin/node",
       env: {
         NODE_ENV: "production",
+        DISCORD_TOKEN: process.env.DISCORD_TOKEN,
+        CLIENT_ID: process.env.CLIENT_ID,
+        GUILD_ID: process.env.GUILD_ID,
       },
-      error_file: "./logs/pm2-error.log",
-      out_file: "./logs/pm2-out.log",
-      log_file: "./logs/pm2-combined.log",
-      time: true,
     },
   ],
 };
