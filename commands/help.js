@@ -49,6 +49,23 @@ module.exports = {
           value: "Shows this help message with all available commands.",
           inline: false,
         },
+        {
+          name: "💾 `/cache` - Cache Status",
+          value:
+            "Check cache statistics, last update time, and current status.",
+          inline: false,
+        },
+        {
+          name: "🤖 `/invite` - Invite Bot",
+          value: "Get the invite link to add this bot to other servers.",
+          inline: false,
+        },
+        {
+          name: "⚙️ `/deploy` - [DEV ONLY] Deploy Commands",
+          value:
+            "Developer command to deploy/register slash commands globally.",
+          inline: false,
+        },
       )
       .addFields({
         name: "💾 Data & Caching",
