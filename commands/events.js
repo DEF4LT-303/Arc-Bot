@@ -38,6 +38,17 @@ module.exports = {
     ),
 
   async execute(interaction) {
+    const selectedMap = interaction.options.getString("map");
+    const selectedEvent = interaction.options.getString("event");
+
+    if (selectedMap && selectedEvent) {
+      return interaction.reply({
+        content:
+          "⚠️ You can only choose **either a map or an event**, not both.",
+        ephemeral: true, // only visible to the user
+      });
+    }
+
     let events = cache.getEvents();
 
     if (!events || events.length === 0) {
@@ -45,9 +56,6 @@ module.exports = {
         "No events currently scheduled or cache not loaded yet.",
       );
     }
-
-    const selectedMap = interaction.options.getString("map");
-    const selectedEvent = interaction.options.getString("event");
 
     const now = Date.now();
 
