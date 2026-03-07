@@ -60,6 +60,12 @@ module.exports = {
           value: "Get the invite link to add this bot to other servers.",
           inline: false,
         },
+        {
+          name: "⚙️ `/deploy` - [DEV ONLY] Deploy Commands",
+          value:
+            "Developer command to deploy/register slash commands globally.",
+          inline: false,
+        },
       )
       .addFields({
         name: "💾 Data & Caching",
