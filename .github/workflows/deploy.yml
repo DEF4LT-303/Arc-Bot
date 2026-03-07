@@ -48,6 +48,7 @@ jobs:
           port: ${{ secrets.HOSTINGER_PORT || 22 }}
           script: |
             cd ${{ secrets.HOSTINGER_DEPLOY_PATH }}/current
+            git pull origin production
             npm install --production
             pm2 stop arc-bot || true
             pm2 delete arc-bot || true
