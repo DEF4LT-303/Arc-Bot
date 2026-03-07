@@ -133,7 +133,7 @@ module.exports = {
               inline: true,
             },
           )
-          .setFooter({ text: "ARC Raiders Event Schedule" })
+          .setFooter({ text: "ARC Raiders Bot | Data from MetaForge API" })
           .setTimestamp();
       });
 
@@ -186,7 +186,7 @@ ${timeStatus} • ${startDate.toLocaleTimeString("en-US", {
         .setTitle(`🗺️ ${selectedMap} Events`)
         .setDescription(eventList)
         .setColor("#3BA55D")
-        .setFooter({ text: "ARC Raiders Event Schedule" })
+        .setFooter({ text: "ARC Raiders Bot | Data from MetaForge API" })
         .setTimestamp();
 
       embeds = [embed];
@@ -241,7 +241,7 @@ ${timeStatus} • ${startDate.toLocaleTimeString("en-US", {
           .setTitle(`🗺️ ${mapName}`)
           .setDescription(eventList)
           .setColor("#3BA55D")
-          .setFooter({ text: "ARC Raiders Event Schedule" })
+          .setFooter({ text: "ARC Raiders Bot | Data from MetaForge API" })
           .setTimestamp();
 
         embeds.push(embed);

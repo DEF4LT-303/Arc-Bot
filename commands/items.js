@@ -76,7 +76,7 @@ module.exports = {
         },
       )
       .setFooter({
-        text: "ARC Raiders Database",
+        text: "ARC Raiders Bot | Data from MetaForge API",
       })
       .setTimestamp();
 
