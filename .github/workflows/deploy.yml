@@ -21,7 +21,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Create .env file
         run: |
@@ -66,7 +66,7 @@ jobs:
           port: ${{ secrets.HOSTINGER_PORT || 22 }}
           script: |
             cd ${{ secrets.HOSTINGER_DEPLOY_PATH }}/current
-            npm ci --production
+            npm install --production
             # Stop existing bot process
             pm2 stop arc-bot || true
             pm2 delete arc-bot || true
