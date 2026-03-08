@@ -28,17 +28,6 @@ jobs:
           echo "DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}" > .env
           echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
 
-      - name: Upload files to Hostinger
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USERNAME }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          port: ${{ secrets.HOSTINGER_PORT || 22 }}
-          source: "."
-          target: ${{ secrets.HOSTINGER_DEPLOY_PATH }}/current
-          strip_components: 0
-
       - name: Deploy and start bot on server
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -47,7 +36,7 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.HOSTINGER_PORT || 22 }}
           script: |
-            cd ${{ secrets.HOSTINGER_DEPLOY_PATH }}/current
+            cd ${{ secrets.HOSTINGER_DEPLOY_PATH }}
             git pull origin production
             npm install --production
             pm2 stop arc-bot || true
@@ -55,7 +44,3 @@ jobs:
             pm2 start ecosystem.config.js --env production --update-env
             pm2 save
             echo "✅ Bot deployed and started with PM2"
-
-            # Register slash commands
-            npm run deploy
-            echo "✅ Slash commands registered"

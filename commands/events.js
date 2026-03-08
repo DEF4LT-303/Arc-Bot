@@ -41,6 +41,8 @@ module.exports = {
           { name: "Lush Blooms", value: "Lush Blooms" },
           { name: "Locked Gate", value: "Locked Gate" },
           { name: "Uncovered Caches", value: "Uncovered Caches" },
+          { name: "Hidden Bunker", value: "Hidden Bunker" },
+          { name: "Launch Tower Loot", value: "Launch Tower Loot" },
         ),
     ),
 
