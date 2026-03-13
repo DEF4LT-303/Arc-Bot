@@ -15,12 +15,19 @@ if (
 }
 
 // Load commands
-const commands = [];
+const allCommands = [];
 const commandFiles = fs.readdirSync(path.join(__dirname, "commands"));
 for (const file of commandFiles) {
   const cmd = require(path.join(__dirname, "commands", file));
-  if (cmd.data) commands.push(cmd.data.toJSON());
+  if (cmd.data) allCommands.push(cmd.data.toJSON());
 }
+
+const devCommands = allCommands.filter((cmd) =>
+  cmd.description.includes("[DEV ONLY]"),
+);
+const publicCommands = allCommands.filter(
+  (cmd) => !cmd.description.includes("[DEV ONLY]"),
+);
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
@@ -32,17 +39,17 @@ const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
         process.env.CLIENT_ID,
         process.env.GUILD_ID,
       ),
-      { body: commands },
+      { body: allCommands },
     );
     console.log(
-      `✅ Registered ${commands.length} commands in guild ${process.env.GUILD_ID}`,
+      `✅ Registered ${allCommands.length} commands in guild ${process.env.GUILD_ID}`,
     );
 
     console.log("Registering global commands…");
     await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
-      body: commands,
+      body: publicCommands,
     });
-    console.log(`✅ Registered ${commands.length} global commands`);
+    console.log(`✅ Registered ${publicCommands.length} global commands`);
   } catch (err) {
     console.error("Failed to register commands", err);
   } finally {

@@ -34,13 +34,15 @@ jobs:
           host: ${{ secrets.HOSTINGER_HOST }}
           username: ${{ secrets.HOSTINGER_USERNAME }}
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          port: ${{ secrets.HOSTINGER_PORT || 22 }}
           script: |
             cd ${{ secrets.HOSTINGER_DEPLOY_PATH }}
             git pull origin production
             npm install --production
             pm2 stop arc-bot || true
             pm2 delete arc-bot || true
-            pm2 start ecosystem.config.js --env production --update-env
+            pm2 start index.js --name arc-bot --update-env
             pm2 save
             echo "✅ Bot deployed and started with PM2"
+
+            # Deploy slash commands
+            npm run deploy

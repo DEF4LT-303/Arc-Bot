@@ -1,12 +1,24 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const cache = require("../cache");
 
+const DEV_USER_ID = "305681776427139073";
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("cache")
-    .setDescription("Check cache status and statistics"),
+    .setDescription("[DEV ONLY] Check cache status and statistics"),
 
   async execute(interaction) {
+    // Check if user is the developer
+    if (interaction.user.id !== DEV_USER_ID) {
+      const embed = new EmbedBuilder()
+        .setTitle("❌ Access Denied")
+        .setDescription("This command is only available to the bot developer.")
+        .setColor("#FF6B6B");
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+      return;
+    }
     const status = cache.getStatus();
 
     const embed = new EmbedBuilder()

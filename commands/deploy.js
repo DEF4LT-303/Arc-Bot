@@ -22,7 +22,7 @@ module.exports = {
     }
 
     // Defer reply as this might take a moment
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply();
 
     try {
       if (!process.env.DISCORD_TOKEN || !process.env.CLIENT_ID) {

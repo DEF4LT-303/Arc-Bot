@@ -140,6 +140,11 @@ module.exports = {
         .setStyle(ButtonStyle.Primary)
         .setDisabled(page === 0),
       new ButtonBuilder()
+        .setCustomId("notify")
+        .setLabel("🔔 Notify Me")
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(filteredEvents[page].startTime <= now),
+      new ButtonBuilder()
         .setCustomId("next")
         .setLabel("Next ➡️")
         .setStyle(ButtonStyle.Primary)
@@ -152,32 +157,47 @@ module.exports = {
       fetchReply: true,
     });
 
-    if (filteredEvents.length <= 1) return;
+    if (filteredEvents.length > 1) {
+      const collector = msg.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 60000,
+      });
 
-    const collector = msg.createMessageComponentCollector({
-      componentType: ComponentType.Button,
-      time: 60000,
-    });
+      collector.on("collect", async (btn) => {
+        if (btn.user.id !== interaction.user.id)
+          return btn.reply({
+            content: "You can't use these buttons.",
+            ephemeral: true,
+          });
 
-    collector.on("collect", (btn) => {
-      if (btn.user.id !== interaction.user.id)
-        return btn.reply({
-          content: "You can't use these buttons.",
-          ephemeral: true,
+        if (btn.customId === "notify") {
+          const event = filteredEvents[page];
+          const success = cache.addNotification(btn.user.id, event);
+          return btn.reply({
+            content: success
+              ? `🔔 Notification set for **${event.name}**`
+              : "⚠️ You already set a reminder for this event.",
+            ephemeral: true,
+          });
+        }
+
+        if (btn.customId === "next") page++;
+        if (btn.customId === "prev") page--;
+
+        row.components[0].setDisabled(page === 0);
+        row.components[2].setDisabled(page === filteredEvents.length - 1);
+        row.components[1].setDisabled(filteredEvents[page].startTime <= now);
+
+        await btn.update({
+          embeds: [generateEmbed(page)],
+          components: [row],
         });
+      });
 
-      if (btn.customId === "next") page++;
-      if (btn.customId === "prev") page--;
-
-      row.components[0].setDisabled(page === 0);
-      row.components[1].setDisabled(page === filteredEvents.length - 1);
-
-      btn.update({ embeds: [generateEmbed(page)], components: [row] });
-    });
-
-    collector.on("end", () => {
-      row.components.forEach((c) => c.setDisabled(true));
-      interaction.editReply({ components: [row] });
-    });
+      collector.on("end", () => {
+        row.components.forEach((c) => c.setDisabled(true));
+        interaction.editReply({ components: [row] });
+      });
+    }
   },
 };
