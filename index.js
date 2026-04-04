@@ -78,6 +78,20 @@ client.on("interactionCreate", async (interaction) => {
 
 client.on("clientReady", () => {
   logger.info(`Bot logged in as ${client.user.tag}`);
+
+  client.user.setPresence({
+    activities: [
+      {
+        name: "Ready to help with /help 🕹️",
+        type: 3,
+      },
+    ],
+    status: "online",
+  });
+
+  setInterval(() => {
+    cache.checkNotifications(client);
+  }, 60000);
 });
 
 logger.info("Starting bot...");

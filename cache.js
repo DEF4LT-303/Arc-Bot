@@ -8,10 +8,89 @@ class ItemCache {
     this.items = [];
     this.quests = [];
     this.events = [];
+    this.notifications = [];
     this.lastUpdated = null;
     this.isUpdating = false;
     this.cacheFile = path.join(__dirname, "cache-data.json");
-    this.loadFromFile(); // Load cache from file on startup
+    this.loadFromFile();
+  }
+
+  addNotification(userId, event) {
+    const id = `${event.name}-${event.map}-${event.startTime}`;
+
+    const exists = this.notifications.find(
+      (n) => n.userId === userId && n.eventId === id,
+    );
+
+    if (exists) return false;
+
+    this.notifications.push({
+      userId,
+      eventId: id,
+      startTime: event.startTime,
+      eventData: event,
+      notified: false,
+    });
+
+    this.saveToFile();
+    return true;
+  }
+
+  getNotifications() {
+    return this.notifications;
+  }
+
+  removeNotification(userId, eventId) {
+    const index = this.notifications.findIndex(
+      (n) => n.userId === userId && n.eventId === eventId,
+    );
+
+    if (index !== -1) {
+      this.notifications.splice(index, 1);
+      this.saveToFile();
+      return true;
+    }
+    return false;
+  }
+
+  markNotified(eventId, userId) {
+    const sub = this.notifications.find(
+      (n) => n.eventId === eventId && n.userId === userId,
+    );
+
+    if (sub) sub.notified = true;
+  }
+
+  async checkNotifications(client) {
+    const now = Date.now();
+    let changed = false;
+
+    for (const sub of [...this.notifications]) {
+      if (now >= sub.startTime) {
+        try {
+          const user = await client.users.fetch(sub.userId);
+          const embed = {
+            title: sub.eventData.name,
+            description: `📍 ${sub.eventData.map}`,
+            thumbnail: { url: sub.eventData.icon },
+            color: 0xff0000,
+            fields: [{ name: "Status", value: "🔴 Event is now LIVE" }],
+          };
+
+          await user.send({ embeds: [embed] });
+
+          this.notifications = this.notifications.filter(
+            (n) => !(n.userId === sub.userId && n.eventId === sub.eventId),
+          );
+
+          changed = true;
+        } catch (err) {
+          logger.info(`Notification failed: ${err.message}`);
+        }
+      }
+    }
+
+    if (changed) this.saveToFile(true);
   }
 
   // Load cache from file
@@ -22,6 +101,7 @@ class ItemCache {
         this.items = data.items || [];
         this.quests = data.quests || [];
         this.events = data.events || [];
+        this.notifications = data.notifications || [];
         this.lastUpdated = data.lastUpdated ? new Date(data.lastUpdated) : null;
         logger.info(
           `Loaded cache from file: ${this.items.length} items, ${this.quests.length} quests, ${this.events.length} events`,
@@ -33,18 +113,19 @@ class ItemCache {
   }
 
   // Save cache to file
-  saveToFile() {
+  saveToFile(quiet = false) {
     try {
       const data = {
         items: this.items,
         quests: this.quests,
         events: this.events,
+        notifications: this.notifications,
         lastUpdated: this.lastUpdated,
       };
       fs.writeFileSync(this.cacheFile, JSON.stringify(data, null, 2));
-      logger.info("Cache saved to file");
+      if (!quiet) logger.info("Cache saved to file");
     } catch (err) {
-      logger.info(`Failed to save cache to file: ${err.message}`);
+      logger.info(`Failed to save cache from file: ${err.message}`);
     }
   }
 
@@ -65,7 +146,7 @@ class ItemCache {
       let hasNextPage = true;
       while (hasNextPage) {
         const res = await axios.get(
-          `https://metaforge.app/api/arc-raiders/items?page=${page}&limit=100`,
+          `https://metaforge.app/api/arc-raiders/items?page=${page}&limit=100&includeComponents=true`,
         );
         allItems = allItems.concat(res.data.data || []);
         hasNextPage = res.data.pagination?.hasNextPage || false;

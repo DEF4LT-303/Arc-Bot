@@ -1,4 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ComponentType,
+} = require("discord.js");
 const cache = require("../cache");
 
 module.exports = {
@@ -34,6 +41,9 @@ module.exports = {
           { name: "Lush Blooms", value: "Lush Blooms" },
           { name: "Locked Gate", value: "Locked Gate" },
           { name: "Uncovered Caches", value: "Uncovered Caches" },
+          { name: "Hidden Bunker", value: "Hidden Bunker" },
+          { name: "Launch Tower Loot", value: "Launch Tower Loot" },
+          { name: "Close Scrutiny", value: "Close Scrutiny" },
         ),
     ),
 
@@ -50,7 +60,6 @@ module.exports = {
     }
 
     const events = cache.getEvents();
-
     if (!events || events.length === 0) {
       return interaction.reply(
         "No events currently scheduled or cache not loaded yet.",
@@ -64,165 +73,132 @@ module.exports = {
       return interaction.reply("No upcoming events found.");
     }
 
-    let embeds = [];
-    let content = "";
+    // PAGINATION VARIABLES
+    let page = 0;
+    const pageSize = 1; // show 1 event per page for selected-event mode
+    let filteredEvents = [];
 
-    // EVENT LOOKUP MODE
     if (selectedEvent) {
-      const matching = upcoming
-        .filter((event) => event.name === selectedEvent)
-        .slice(0, 10);
-
-      if (matching.length === 0) {
+      filteredEvents = upcoming.filter((e) => e.name === selectedEvent);
+      if (filteredEvents.length === 0) {
         return interaction.reply(
           `No upcoming **${selectedEvent}** events found.`,
         );
       }
-
-      embeds = matching.map((event) => {
-        const startUnix = Math.floor(event.startTime / 1000);
-        const endUnix = Math.floor(event.endTime / 1000);
-        const durationMins = (event.endTime - event.startTime) / 1000 / 60;
-
-        const timeUntilStart = event.startTime - now;
-
-        let timeStatus = "";
-        if (timeUntilStart > 0) {
-          timeStatus = `🕐 Starts <t:${startUnix}:R>`;
-        } else {
-          timeStatus = `🔴 ACTIVE • ends <t:${endUnix}:R>`;
-        }
-
-        return new EmbedBuilder()
-          .setTitle(event.name)
-          .setDescription(`📍 **${event.map}**`)
-          .setThumbnail(event.icon)
-          .setColor(event.startTime > now ? "#3BA55D" : "#FF6B6B")
-          .addFields(
-            {
-              name: "⏱️ Status",
-              value: timeStatus,
-              inline: false,
-            },
-            {
-              name: "🕐 Start",
-              value: `<t:${startUnix}:t>`,
-              inline: true,
-            },
-            {
-              name: "🕑 End",
-              value: `<t:${endUnix}:t>`,
-              inline: true,
-            },
-            {
-              name: "⏳ Duration",
-              value: `${durationMins} minutes`,
-              inline: true,
-            },
-          )
-          .setFooter({ text: "ARC Raiders Bot | Data from MetaForge API" })
-          .setTimestamp();
-      });
-
-      content = `Showing upcoming **${selectedEvent}** events`;
-    }
-
-    // MAP LOOKUP MODE
-    else if (selectedMap) {
-      const mapEvents = upcoming
-        .filter((event) => event.map === selectedMap)
-        .slice(0, 10);
-
-      if (mapEvents.length === 0) {
+    } else if (selectedMap) {
+      filteredEvents = upcoming.filter((e) => e.map === selectedMap);
+      if (filteredEvents.length === 0) {
         return interaction.reply(
           `No upcoming events found for **${selectedMap}**.`,
         );
       }
-
-      const eventList = mapEvents
-        .map((event) => {
-          const startUnix = Math.floor(event.startTime / 1000);
-          const endUnix = Math.floor(event.endTime / 1000);
-
-          const timeUntilStart = event.startTime - now;
-
-          let timeStatus = "";
-          if (timeUntilStart > 0) {
-            timeStatus = `🕐 <t:${startUnix}:R>`;
-          } else {
-            timeStatus = `🔴 ends <t:${endUnix}:R>`;
-          }
-
-          return `**${event.name}**
-${timeStatus} • <t:${startUnix}:t> - <t:${endUnix}:t>`;
-        })
-        .join("\n\n");
-
-      const embed = new EmbedBuilder()
-        .setTitle(`📍 ${selectedMap} Events`)
-        .setDescription(eventList)
-        .setColor("#3BA55D")
-        .setFooter({ text: "ARC Raiders Bot | Data from MetaForge API" })
-        .setTimestamp();
-
-      embeds = [embed];
-      content = `Showing ${mapEvents.length} upcoming events on **${selectedMap}**`;
+    } else {
+      // all maps mode
+      filteredEvents = upcoming.slice(0, 10);
     }
 
-    // ALL MAPS MODE
-    else {
-      const maps = [
-        "Buried City",
-        "Spaceport",
-        "Dam",
-        "Blue Gate",
-        "Stella Montis",
-      ];
+    const generateEmbed = (page) => {
+      const event = filteredEvents[page];
+      const startUnix = Math.floor(event.startTime / 1000);
+      const endUnix = Math.floor(event.endTime / 1000);
+      const durationMins = Math.floor(
+        (event.endTime - event.startTime) / 1000 / 60,
+      );
+      const timeUntilStart = event.startTime - now;
 
-      for (const mapName of maps) {
-        const mapUpcoming = upcoming
-          .filter((event) => event.map === mapName)
-          .slice(0, 5);
-
-        if (mapUpcoming.length === 0) continue;
-
-        const eventList = mapUpcoming
-          .map((event) => {
-            const startUnix = Math.floor(event.startTime / 1000);
-            const endUnix = Math.floor(event.endTime / 1000);
-
-            const timeUntilStart = event.startTime - now;
-
-            let timeStatus = "";
-            if (timeUntilStart > 0) {
-              timeStatus = `🕐 <t:${startUnix}:R>`;
-            } else {
-              timeStatus = `🔴 ends <t:${endUnix}:R>`;
-            }
-
-            return `**${event.name}**
-${timeStatus} • <t:${startUnix}:t>`;
-          })
-          .join("\n\n");
-
-        const embed = new EmbedBuilder()
-          .setTitle(`📍 ${mapName}`)
-          .setDescription(eventList)
-          .setColor("#3BA55D")
-          .setFooter({ text: "ARC Raiders Bot | Data from MetaForge API" })
-          .setTimestamp();
-
-        embeds.push(embed);
-
-        if (embeds.length >= 10) break;
+      let timeStatus = "";
+      if (timeUntilStart > 0) {
+        timeStatus = `🕐 Starts <t:${startUnix}:R>`;
+      } else {
+        timeStatus = `🔴 ACTIVE • ends <t:${endUnix}:R>`;
       }
 
-      content = `Showing upcoming events across all maps`;
-    }
+      return new EmbedBuilder()
+        .setTitle(event.name)
+        .setDescription(`📍 **${event.map}**`)
+        .setThumbnail(event.icon)
+        .setColor(event.startTime > now ? "#3BA55D" : "#FF6B6B")
+        .addFields(
+          { name: "⏱️ Status", value: timeStatus, inline: false },
+          { name: "🕐 Start", value: `<t:${startUnix}:t>`, inline: true },
+          { name: "🕑 End", value: `<t:${endUnix}:t>`, inline: true },
+          {
+            name: "⏳ Duration",
+            value: `${durationMins} minutes`,
+            inline: true,
+          },
+        )
+        .setFooter({
+          text: `ARC Raiders Bot | Page ${page + 1} of ${filteredEvents.length}`,
+        })
+        .setTimestamp();
+    };
 
-    await interaction.reply({
-      content,
-      embeds,
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("prev")
+        .setLabel("⬅️ Previous")
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(page === 0),
+      new ButtonBuilder()
+        .setCustomId("notify")
+        .setLabel("🔔 Notify Me")
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(filteredEvents[page].startTime <= now),
+      new ButtonBuilder()
+        .setCustomId("next")
+        .setLabel("Next ➡️")
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(filteredEvents.length <= 1),
+    );
+
+    const msg = await interaction.reply({
+      embeds: [generateEmbed(page)],
+      components: [row],
+      fetchReply: true,
     });
+
+    if (filteredEvents.length > 1) {
+      const collector = msg.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 60000,
+      });
+
+      collector.on("collect", async (btn) => {
+        if (btn.user.id !== interaction.user.id)
+          return btn.reply({
+            content: "You can't use these buttons.",
+            ephemeral: true,
+          });
+
+        if (btn.customId === "notify") {
+          const event = filteredEvents[page];
+          const success = cache.addNotification(btn.user.id, event);
+          return btn.reply({
+            content: success
+              ? `🔔 Notification set for **${event.name}**`
+              : "⚠️ You already set a reminder for this event.",
+            ephemeral: true,
+          });
+        }
+
+        if (btn.customId === "next") page++;
+        if (btn.customId === "prev") page--;
+
+        row.components[0].setDisabled(page === 0);
+        row.components[2].setDisabled(page === filteredEvents.length - 1);
+        row.components[1].setDisabled(filteredEvents[page].startTime <= now);
+
+        await btn.update({
+          embeds: [generateEmbed(page)],
+          components: [row],
+        });
+      });
+
+      collector.on("end", () => {
+        row.components.forEach((c) => c.setDisabled(true));
+        interaction.editReply({ components: [row] });
+      });
+    }
   },
 };
