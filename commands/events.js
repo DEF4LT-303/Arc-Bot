@@ -43,6 +43,7 @@ module.exports = {
           { name: "Uncovered Caches", value: "Uncovered Caches" },
           { name: "Hidden Bunker", value: "Hidden Bunker" },
           { name: "Launch Tower Loot", value: "Launch Tower Loot" },
+          { name: "Close Scrutiny", value: "Close Scrutiny" },
         ),
     ),
 

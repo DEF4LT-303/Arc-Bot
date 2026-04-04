@@ -3,7 +3,7 @@ name: Deploy to Hostinger
 on:
   push:
     branches:
-      - production
+      - main
   workflow_dispatch:
 
 jobs:
@@ -36,11 +36,11 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           script: |
             cd ${{ secrets.HOSTINGER_DEPLOY_PATH }}
-            git pull origin production
+            git pull origin main
             npm install --production
             pm2 stop arc-bot || true
             pm2 delete arc-bot || true
-            pm2 start index.js --name arc-bot --update-env
+            pm2 start ecosystem.config.js --env production
             pm2 save
             echo "✅ Bot deployed and started with PM2"
 
