@@ -69,7 +69,8 @@ module.exports = {
             value: item.loot_area || "Unknown",
             inline: false,
           },
-        );
+        )
+        .setFooter({ text: "ARC Raiders Bot | /item" });
 
       if (usedIn.length) {
         const start = page * pageSize;

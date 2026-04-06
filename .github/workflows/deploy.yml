@@ -1,4 +1,4 @@
-name: Deploy to Hostinger
+name: Deploy to VPS
 
 on:
   push:
@@ -14,21 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Create .env file
-        run: |
-          echo "DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}" > .env
-          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
-
-      - name: Deploy and start bot on server
+      - name: Deploy and restart bot on VPS
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.HOSTINGER_HOST }}
@@ -36,13 +22,27 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           script: |
             cd ${{ secrets.HOSTINGER_DEPLOY_PATH }}
-            git pull origin main
-            npm install --production
-            pm2 stop arc-bot || true
-            pm2 delete arc-bot || true
-            pm2 start ecosystem.config.js --env production
-            pm2 save
-            echo "✅ Bot deployed and started with PM2"
 
-            # Deploy slash commands
+            echo "📥 Pulling latest code..."
+            git fetch origin
+            git reset --hard origin/main
+
+            echo "📁 Ensuring log directories..."
+            mkdir -p logs/pm2
+
+            echo "🔐 Writing environment variables..."
+            echo "DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}" > .env
+            echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
+
+            echo "📦 Installing dependencies..."
+            npm ci --omit=dev
+
+            echo "⚡ Deploying slash commands..."
             npm run deploy
+
+            echo "🔄 Restarting bot..."
+            pm2 startOrReload ecosystem.config.js --env production
+
+            pm2 save
+
+            echo "✅ Deployment complete"
