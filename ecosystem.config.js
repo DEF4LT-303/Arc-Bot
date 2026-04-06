@@ -8,6 +8,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_restarts: 10,
+      max_memory_restart: "300M",
       env: {
         NODE_ENV: "production",
       },
