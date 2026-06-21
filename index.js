@@ -2,7 +2,8 @@ require("dotenv").config();
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
 const fs = require("fs");
 const logger = require("./logger");
-const cache = require("./cache"); // Initialize cache on startup
+const cache = require("./cache");
+const vpsMonitor = require("./vps-monitor");
 
 // ensure required env vars exist
 if (!process.env.DISCORD_TOKEN) {
@@ -88,6 +89,8 @@ client.on("clientReady", () => {
     ],
     status: "online",
   });
+
+  vpsMonitor.start(client);
 
   setInterval(() => {
     cache.checkNotifications(client);
